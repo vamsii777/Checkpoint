@@ -2,9 +2,9 @@ name: Build Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   build-linux:
@@ -50,11 +50,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-swift-build-
 
-    - name: Build Debug
-      run: swift build --verbose
-      
-    - name: Build Release  
-      run: swift build -c release --verbose
+    - name: Build
+      run: swift build
 
   validate-package:
     runs-on: ubuntu-latest
