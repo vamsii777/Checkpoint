@@ -5,7 +5,11 @@
 //  Created by Adolfo Vera Blasco on 17/6/24.
 //
 
+#if canImport(Combine)
 import Combine
+#else
+import OpenCombine
+#endif
 import Foundation
 
 public typealias WindowBasedAction = () throws -> Void

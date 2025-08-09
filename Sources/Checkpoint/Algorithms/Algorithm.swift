@@ -5,7 +5,11 @@
 //  Created by Adolfo Vera Blasco on 14/6/24.
 //
 
+#if canImport(Combine)
 import Combine
+#else
+import OpenCombine
+#endif
 import Redis
 import Vapor
 

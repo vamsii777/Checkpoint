@@ -1,0 +1,79 @@
+name: Build Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0-jammy
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Cache Swift packages
+      uses: actions/cache@v4
+      with:
+        path: .build
+        key: ${{ runner.os }}-swift-build-${{ hashFiles('Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-build-
+
+    - name: Build Debug
+      run: swift build --verbose
+      
+    - name: Build Release
+      run: swift build -c release --verbose
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: "6.0"
+        
+    - name: Cache Swift packages
+      uses: actions/cache@v4
+      with:
+        path: .build
+        key: ${{ runner.os }}-swift-build-${{ hashFiles('Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-build-
+
+    - name: Build Debug
+      run: swift build --verbose
+      
+    - name: Build Release  
+      run: swift build -c release --verbose
+
+  validate-package:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0-jammy
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Validate Swift package
+      run: swift package describe --type json
+      
+    - name: Check for OpenCombine availability on Linux
+      run: |
+        swift package describe --type json | jq '.dependencies[] | select(.identity == "opencombine")'
+        if [ $? -eq 0 ]; then
+          echo "✅ OpenCombine dependency found for Linux compatibility"
+        else
+          echo "❌ OpenCombine dependency missing"
+          exit 1
+        fi

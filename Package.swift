@@ -19,9 +19,11 @@ let package = Package(
     ],
 	dependencies: [
 		// 💧 A server-side Swift web framework.
-		.package(url: "https://github.com/vapor/vapor.git", from: "4.99.3"),
+		.package(url: "https://github.com/vapor/vapor.git", from: "4.115.0"),
 		// Redis. Rate-Limit middleware
-		.package(url: "https://github.com/vapor/redis.git", from: "4.0.0"),
+		.package(url: "https://github.com/vapor/redis.git", from: "4.13.0"),
+		// OpenCombine for Linux compatibility when Combine isn't available
+		.package(url: "https://github.com/OpenCombine/OpenCombine.git", from: "0.14.0"),
 	],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -30,7 +32,10 @@ let package = Package(
             name: "Checkpoint",
 			dependencies: [
 				.product(name: "Vapor", package: "vapor"),
-				.product(name: "Redis", package: "redis")
+				.product(name: "Redis", package: "redis"),
+				"OpenCombine",
+				.product(name: "OpenCombineFoundation", package: "OpenCombine"),
+				.product(name: "OpenCombineDispatch", package: "OpenCombine")
 			]
 		),
         .testTarget(
