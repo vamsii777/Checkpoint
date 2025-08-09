@@ -5,7 +5,7 @@
 //  Created by Adolfo Vera Blasco on 15/6/24.
 //
 
-import Redis
+@preconcurrency import Redis
 import Vapor
 
 /// The Sliding Window Log rate-limit algorithim is based on the request count perfomed during a non fixed window time.
@@ -30,7 +30,7 @@ public final class SlidingWindowLog {
 	/// - configuration: A `SlidingWindowLogConfiguration` object
 	/// - storage: The Redis database instance created on Vapor
 	/// - logging: A `Logger` object created on Vapor.
-	public init(configuration: () -> SlidingWindowLogConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
+	public init(configuration: @Sendable () -> SlidingWindowLogConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
 		self.configuration = configuration()
 		self.storage = storage()
 		self.logging = logging?()
@@ -50,11 +50,11 @@ extension SlidingWindowLog: Algorithm {
 		
 		// 1. Delete outdated request
 		let topBound: Double = Double(outdatedRequestLimiteDate.timeIntervalSinceReferenceDate)
-		let deletedEntriesCount = try await storage.zremrangebyscore(from: redisKey, withMaximumScoreOf: RedisZScoreBound(floatLiteral: topBound)).get()
+		_ = try await storage.zremrangebyscore(from: redisKey, withMaximumScoreOf: RedisZScoreBound(floatLiteral: topBound)).get()
 		
 		// 2. Add the current request
 		let requestTimeInterval = Double(requestDate.timeIntervalSinceReferenceDate)
-		try await storage.zadd([ (element: requestTimeInterval, score: requestTimeInterval) ], to: redisKey).get()
+		_ = try await storage.zadd([ (element: requestTimeInterval, score: requestTimeInterval) ], to: redisKey).get()
 		
 		// 3. Get the number of request for this time window
 		let itemsCount = try await storage.zcount(of: redisKey, withScores: 0.0...requestTimeInterval).get()

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct TokenBucketConfiguration: Configuration {
+public struct TokenBucketConfiguration: Configuration, Sendable {
 	public private(set) var bucketSize: Int
 	public private(set) var refillTokenRate: Int
 	public private(set) var refillTimeInterval: TimeWindow

@@ -8,21 +8,22 @@
 import Redis
 import Vapor
 
-public typealias CheckpointHandler = (Request) -> Void
-public typealias CheckpointRateLimitHandler = (Request, Response, Checkpoint.ErrorMetadata) -> Void
-public typealias CheckpointErrorHandler = (Request, Response, AbortError, Checkpoint.ErrorMetadata) -> Void
+public typealias CheckpointHandler = @Sendable (Request) -> Void
+public typealias CheckpointRateLimitHandler = @Sendable (Request, Response, Checkpoint.ErrorMetadata) -> Void
+public typealias CheckpointErrorHandler = @Sendable (Request, Response, AbortError, Checkpoint.ErrorMetadata) -> Void
 
-public final class Checkpoint {
+public actor Checkpoint {
 	private let algorithm: any Algorithm
 	
-	public var willCheck: CheckpointHandler?
-	public var didCheck: CheckpointHandler?
-	public var didFailWithTooManyRequest: CheckpointRateLimitHandler?
-	public var didFail: CheckpointErrorHandler?
+	nonisolated(unsafe) public var willCheck: CheckpointHandler?
+	nonisolated(unsafe) public var didCheck: CheckpointHandler?
+	nonisolated(unsafe) public var didFailWithTooManyRequest: CheckpointRateLimitHandler?
+	nonisolated(unsafe) public var didFail: CheckpointErrorHandler?
 	
 	public init(using algorithm: some Algorithm) {
 		self.algorithm = algorithm
 	}
+	
 }
 
 extension Checkpoint: AsyncMiddleware {

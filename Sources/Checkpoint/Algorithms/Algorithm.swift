@@ -13,13 +13,13 @@ import OpenCombine
 import Redis
 import Vapor
 
-public typealias StorageAction = () -> Application.Redis
-public typealias LoggerAction = () -> Logger
+public typealias StorageAction = @Sendable () -> Application.Redis
+public typealias LoggerAction = @Sendable () -> Logger
 
 /// Definition for the different Rate-Limit algorithims
 public protocol Algorithm: Sendable {
 	/// The configuration type used in a specific algorithim
-	associatedtype ConfigurationType
+	associatedtype ConfigurationType: Sendable
 	
 	/// The Redis database used to store the request data
 	var storage: Application.Redis { get }
@@ -28,7 +28,7 @@ public protocol Algorithm: Sendable {
 	
 	/// Create a new Rate-Limit algorithim with a given configuration,
 	/// storage and logging
-	init(configuration: () -> ConfigurationType, storage: StorageAction, logging: LoggerAction?)
+	init(configuration: @Sendable () -> ConfigurationType, storage: StorageAction, logging: LoggerAction?)
 	
 	/// Performs the algorithim logic to check if a request is valid
 	/// or reach the rate-limit specified on the algorithim's configuration

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct LeakingBucketConfiguration: Configuration {
+public struct LeakingBucketConfiguration: Configuration, Sendable {
 	public var bucketSize: Int
 	public var tokenRemovingRate: Int
 	public var timeWindowDuration: TimeWindow

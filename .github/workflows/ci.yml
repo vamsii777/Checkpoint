@@ -38,6 +38,9 @@ jobs:
     - name: Build
       run: swift build --verbose
       
+    - name: Build with Swift 6 strict concurrency
+      run: swift build -Xswiftc -strict-concurrency=complete --verbose
+      
     - name: Run tests
       run: swift test --verbose
       env:
@@ -70,6 +73,9 @@ jobs:
 
     - name: Build
       run: swift build --verbose
+      
+    - name: Build with Swift 6 strict concurrency
+      run: swift build -Xswiftc -strict-concurrency=complete --verbose
       
     - name: Run tests
       run: swift test --verbose

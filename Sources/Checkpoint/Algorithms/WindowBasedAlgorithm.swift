@@ -12,7 +12,7 @@ import OpenCombine
 #endif
 import Foundation
 
-public typealias WindowBasedAction = () throws -> Void
+public typealias WindowBasedAction = @Sendable () throws -> Void
 
 /// For those algorithims thar works with fixed time windows.
 public protocol WindowBasedAlgorithm: Algorithm {
@@ -24,7 +24,7 @@ public protocol WindowBasedAlgorithm: Algorithm {
 
 extension WindowBasedAlgorithm {
 	public func startWindow(havingDuration seconds: Double, performing action: @escaping WindowBasedAction) -> AnyCancellable {
-		var cancellable = Timer.publish(every: seconds, on: .main, in: .common)
+		let cancellable = Timer.publish(every: seconds, on: .main, in: .common)
 			.autoconnect()
 			.sink { _ in
 				do {

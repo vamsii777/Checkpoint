@@ -22,21 +22,26 @@ import Vapor
  • We take 1 token out for each request and if there are enough tokens, then the request is processed.
  • The request is dropped if there aren’t enough tokens.
 */
-public final class TokenBucket {
+public actor TokenBucket {
 	private let configuration: TokenBucketConfiguration
 	public let storage: Application.Redis
 	public let logging: Logger?
 	
-	private var cancellable: AnyCancellable?
+	nonisolated(unsafe) private var cancellable: AnyCancellable?
 	private var keys = Set<String>()
 	
-	public init(configuration: () -> TokenBucketConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
+	public init(configuration: @Sendable () -> TokenBucketConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
 		self.configuration = configuration()
 		self.storage = storage()
 		self.logging = logging?()
 		
+		let resetAction: WindowBasedAction = { [weak self] in
+			Task {
+				try await self?.resetWindow()
+			}
+		}
 		self.cancellable = startWindow(havingDuration: self.configuration.refillTimeInterval.inSeconds,
-									   performing: resetWindow)
+									   performing: resetAction)
 	}
 	
 	deinit {
@@ -46,7 +51,7 @@ public final class TokenBucket {
 	private func preparaStorageFor(key: RedisKey) async {
 		do {
 			try await storage.set(key, to: configuration.bucketSize).get()
-		} catch let redisError {
+		} catch {
 			logging?.error("🚨 Problem setting key \(key.rawValue) to value \(configuration.bucketSize)")
 		}
 	}
@@ -75,7 +80,7 @@ extension TokenBucket: WindowBasedAlgorithm {
 		}
 	}
 	
-	public func resetWindow() throws {
+	public func resetWindow() async throws {
 		keys.forEach { key in
 			Task(priority: .userInitiated) {
 				let redisKey = RedisKey(key)
@@ -95,7 +100,7 @@ extension TokenBucket: WindowBasedAlgorithm {
 					}
 				}
 					
-				try await storage.increment(redisKey, by: newRefillSize).get()
+				_ = try await storage.increment(redisKey, by: newRefillSize).get()
 			}
 		}
 	}
