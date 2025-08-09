@@ -24,11 +24,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-swift-build-
 
-    - name: Build Debug
-      run: swift build --verbose
-      
-    - name: Build Release
-      run: swift build -c release --verbose
+    - name: Build
+      run: swift build
 
   build-macos:
     runs-on: macos-latest
