@@ -11,6 +11,7 @@ import Combine
 import OpenCombine
 #endif
 import Foundation
+import Dispatch
 
 public typealias WindowBasedAction = @Sendable () throws -> Void
 
@@ -24,7 +25,9 @@ public protocol WindowBasedAlgorithm: Algorithm {
 
 extension WindowBasedAlgorithm {
 	public func startWindow(havingDuration seconds: Double, performing action: @escaping WindowBasedAction) -> AnyCancellable {
-		let cancellable = Timer.publish(every: seconds, on: .main, in: .common)
+		#if os(iOS) || os(macOS) || os(tvOS) || os(watchOS)
+		// Use Timer.publish on Apple platforms
+		return Timer.publish(every: seconds, on: .main, in: .common)
 			.autoconnect()
 			.sink { _ in
 				do {
@@ -33,8 +36,24 @@ extension WindowBasedAlgorithm {
 					self.logging?.error("🚨 Something wrong at timer: \(timerError.localizedDescription)")
 				}
 			}
+		#else
+		// Use DispatchSourceTimer for other platforms (Linux, etc.)
+		let timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+		timer.schedule(deadline: .now() + seconds, repeating: seconds)
+		timer.setEventHandler {
+			do {
+				try action()
+			} catch let timerError {
+				self.logging?.error("🚨 Something wrong at timer: \(timerError.localizedDescription)")
+			}
+		}
+		timer.resume()
 		
-		return cancellable
+		// Return an AnyCancellable that cancels the timer
+		return AnyCancellable {
+			timer.cancel()
+		}
+		#endif
 	}
 }
 
