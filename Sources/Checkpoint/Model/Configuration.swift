@@ -6,7 +6,7 @@
 //
 
 
-public protocol Configuration {
+public protocol Configuration: Sendable {
 	var appliedField: Field { get }
 	var scope: Scope { get }
 }

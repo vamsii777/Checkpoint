@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct FixedWindowCounterConfiguration: Configuration {
+public struct FixedWindowCounterConfiguration: Configuration, Sendable {
 	public private(set) var requestPerWindow: Int
 	public private(set) var timeWindowDuration: TimeWindow
 	

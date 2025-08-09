@@ -5,8 +5,12 @@
 //  Created by Adolfo Vera Blasco on 15/6/24.
 //
 
+#if canImport(Combine)
 import Combine
-import Redis
+#else
+import OpenCombine
+#endif
+@preconcurrency import Redis
 import Vapor
 
 /**
@@ -18,20 +22,25 @@ import Vapor
  4. If the bucket is not full, we allow the request and add 1 token from the bucket.
  5. Tokens are removed at a fixed rate of r tokens per second. Let’s say 1 token per second.
 */
-public final class LeakingBucket {
+public actor LeakingBucket {
 	private let configuration: LeakingBucketConfiguration
 	public let storage: Application.Redis
 	public let logging: Logger?
 	
-	private var cancellable: AnyCancellable?
+	nonisolated(unsafe) private var cancellable: AnyCancellable?
 	private var keys = Set<String>()
 	
-	public init(configuration: () -> LeakingBucketConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
+	public init(configuration: @Sendable () -> LeakingBucketConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
 		self.configuration = configuration()
 		self.storage = storage()
 		self.logging = logging?()
+		let resetAction: WindowBasedAction = { [weak self] in
+			Task {
+				try await self?.resetWindow()
+			}
+		}
 		self.cancellable = startWindow(havingDuration: self.configuration.timeWindowDuration.inSeconds,
-									   performing: resetWindow)
+									   performing: resetAction)
 	}
 	
 	deinit {
@@ -70,7 +79,7 @@ extension LeakingBucket: WindowBasedAlgorithm {
 		}
 	}
 	
-	public func resetWindow() throws {
+	public func resetWindow() async throws {
 		keys.forEach { key in
 			Task(priority: .userInitiated) {
 				let redisKey = RedisKey(key)
@@ -83,7 +92,7 @@ extension LeakingBucket: WindowBasedAlgorithm {
 					newBucketSize = currentBucketSize < configuration.tokenRemovingRate ? 0 : (currentBucketSize - configuration.tokenRemovingRate)
 				}
 				
-				try await storage.decrement(redisKey, by: newBucketSize).get()
+				_ = try await storage.decrement(redisKey, by: newBucketSize).get()
 			}
 		}
 	}

@@ -53,7 +53,7 @@ let tokenbucketAlgorithm = TokenBucket {
 } storage: {
 	// Rate limit database in Redis
 	app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-															 port: 9090,
+															 port: 6379,
 															 database: 0)
 	
 	return app.redis("rate")
@@ -96,7 +96,7 @@ let leakingBucketAlgorithm = LeakingBucket {
 } storage: {
 	// Rate limit database in Redis
 	app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-															 port: 9090,
+															 port: 6379,
 															 database: 0)
 	
 	return app.redis("rate")
@@ -138,7 +138,7 @@ let fixedWindowAlgorithm = FixedWindowCounter {
 } storage: {
 	// Rate limit database in Redis
 	app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-															 port: 9090,
+															 port: 6379,
 															 database: 0)
 	
 	return app.redis("rate")
@@ -187,7 +187,7 @@ let slidingWindowLogAlgorith = SlidingWindowLog {
 } storage: {
 	// Rate limit database in Redis
 	app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-															 port: 9090,
+															 port: 6379,
 															 database: 0)
 	
 	return app.redis("rate")

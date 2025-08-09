@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct SlidingWindowLogConfiguration: Configuration {
+public struct SlidingWindowLogConfiguration: Configuration, Sendable {
 	public var requestPerWindow: Int
 	public var timeWindowDuration: TimeWindow
 	

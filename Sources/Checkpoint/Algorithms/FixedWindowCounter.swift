@@ -5,8 +5,12 @@
 //  Created by Adolfo Vera Blasco on 15/6/24.
 //
 
+#if canImport(Combine)
 import Combine
-import Redis
+#else
+import OpenCombine
+#endif
+@preconcurrency import Redis
 import Vapor
 
 /**
@@ -17,7 +21,7 @@ import Vapor
 	4. If the counter is greater than the rate limit, the request is rejected and whe send an HTTP 429 code status.
 	5. If the counter is less than the rate limit, the request is accepted.
 */
-public final class FixedWindowCounter {
+public actor FixedWindowCounter {
 	// Configuration for this rate-limit algorithm
 	private let configuration: FixedWindowCounterConfiguration
 	// The Redis database where we store the request information
@@ -26,7 +30,7 @@ public final class FixedWindowCounter {
 	public let logging: Logger?
 	
 	// The Combine Timer publishers
-	private var cancellable: AnyCancellable?
+	nonisolated(unsafe) private var cancellable: AnyCancellable?
 	// Keys stored in a given time window
 	private var keys = Set<String>()
 	
@@ -34,13 +38,18 @@ public final class FixedWindowCounter {
 	 
 	 
 	*/
-	public init(configuration: () -> FixedWindowCounterConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
+	public init(configuration: @Sendable () -> FixedWindowCounterConfiguration, storage: StorageAction, logging: LoggerAction? = nil) {
 		self.configuration = configuration()
 		self.storage = storage()
 		self.logging = logging?()
 		
+		let resetAction: WindowBasedAction = { [weak self] in
+			Task {
+				await self?.resetWindow()
+			}
+		}
 		self.cancellable = startWindow(havingDuration: self.configuration.timeWindowDuration.inSeconds,
-									   performing: resetWindow)
+									   performing: resetAction)
 	}
 	
 	/**
@@ -70,13 +79,13 @@ extension FixedWindowCounter: WindowBasedAlgorithm {
 		}
 	}
 	
-	public func resetWindow() {
+	public func resetWindow() async {
 		keys.forEach { key in
 			let redisKey = RedisKey(key)
 	
 			Task {
 				do {
-					try	await storage.delete(redisKey).get()
+					_ = try await storage.delete(redisKey).get()
 				} catch let redisError {
 					logging?.error("🚨 Error deleting key \(key): \(redisError.localizedDescription)")
 				}

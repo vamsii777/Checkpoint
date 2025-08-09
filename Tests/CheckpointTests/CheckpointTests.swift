@@ -27,7 +27,7 @@ final class CheckpointTests: XCTestCase {
 		} storage: {
 			// Rate limit database in Redis
 			app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-																	 port: 9090,
+																	 port: 6379,
 																	 database: 0)
 			
 			return app.redis("rate")
@@ -64,7 +64,7 @@ final class CheckpointTests: XCTestCase {
 		} storage: {
 			// Rate limit database in Redis
 			app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-																	 port: 9090,
+																	 port: 6379,
 																	 database: 0)
 			
 			return app.redis("rate")
@@ -102,7 +102,7 @@ final class CheckpointTests: XCTestCase {
 		} storage: {
 			// Rate limit database in Redis
 			app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-																	 port: 9090,
+																	 port: 6379,
 																	 database: 0)
 			
 			return app.redis("rate")
@@ -139,7 +139,7 @@ final class CheckpointTests: XCTestCase {
 		} storage: {
 			// Rate limit database in Redis
 			app.redis("rate").configuration = try? RedisConfiguration(hostname: "localhost",
-																	 port: 9090,
+																	 port: 6379,
 																	 database: 0)
 			
 			return app.redis("rate")

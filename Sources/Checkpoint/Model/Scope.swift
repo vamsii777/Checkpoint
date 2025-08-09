@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Scope {
+public enum Scope: Sendable {
 	case api
 	case endpoint
 	case noScope
